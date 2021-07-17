@@ -16,7 +16,8 @@ namespace Sinevia;
 
 class ArrayUtils {
     /**
-     * Returns the speified columns
+     * Returns the specified columns
+     * @return array
      */
     public static function columns(array $arr, array $keysSelect)
     {    
@@ -26,6 +27,22 @@ class ArrayUtils {
         }, $arr);
 
         return $filteredArray;
+    }
+    
+    
+    /**
+     * Returns whether the supplied array is associative
+     * @return array
+     */
+    public static function isAssoc(array $array)
+    {
+        if (array() === $array) {
+            return false;
+        }
+        if (count($array) < 1){
+            return false;
+        }
+        return array_keys($array) !== range(0, count($array) - 1);
     }
     
     /**
@@ -99,13 +116,35 @@ class ArrayUtils {
     /**
      * Creates a CSV formatted text from array
      * @param array $array
-     * @return text
+     * @return string
      */
-    public static function toCsv(array $array) {
+    public static function toCsv(array $array, $quoteAlways = true) {
+        $headers = [];
+
+        if (count($array) > 0 AND self::isAssoc($array[0])) {
+            $headers = array_keys($array[0]);
+        }
+
         ob_start();
         $fp = fopen('php://output', 'w');
+
+        if (count($headers) > 0) {
+            fputcsv($fp, $headers);
+        }
+
         foreach ($array as $row) {
-            fputcsv($fp, $row);
+            if ($quoteAlways) {
+                fputs($fp, implode(",", array_map(function ($value) {
+                                    ///remove any ESCAPED double quotes within string.
+                                    $value = str_replace('\\"', '"', $value);
+                                    //then force escape these same double quotes And Any UNESCAPED Ones.
+                                    $value = str_replace('"', '\"', $value);
+                                    //force wrap value in quotes and return
+                                    return '"' . $value . '"';
+                                }, $row)) . "\n");
+            } else {
+                fputcsv($fp, $row);
+            }
         }
         fclose($fp);
         return ob_get_clean();
