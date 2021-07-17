@@ -16,6 +16,23 @@ namespace Sinevia;
 
 class ArrayUtils {
     /**
+     * This is similar to http://php.net/manual/en/function.array-reduce.php but returns
+     * the return from the callback immediately when it is 'truthy'. The callback also
+     * is being passed the 'key' in addition to just the 'value'. So this is basically
+     * some sort of more flexible array_reduce, array_filter and array_search
+     */
+    public static function find($array, $callback) {
+        foreach ($array as $key => $value) {
+            $result = $callback($value, $key);
+            if ($result) {
+                return $result;
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
      * Returns the specified columns
      * @return array
      */
